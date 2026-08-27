@@ -1,7 +1,7 @@
-import { RepositoryFile, CodeChunk } from "./types.js";
-import { createChunks } from "./slidingWindow.js";
+import { RepositoryFile, CodeChunk } from "./chunk.types.js";
+import { createChunks } from "./chunk.slidingWindow.js";
 
-export const chunkerService = {
+export const chunkService = {
   chunk(files: RepositoryFile[]): CodeChunk[] {
     const chunks: CodeChunk[] = [];
 

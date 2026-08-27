@@ -3,7 +3,7 @@ import { ApiError } from "../../utils/ApiError.js";
 import { getConversation, getRecentMessages, saveMessage } from "./chat.repository.js";
 
 import { retrievalService } from "../retrieval/retrieval.service.js";
-import { llmService } from "./llm.service.js";
+import { llmService } from "./chat.llm.js";
 
 export const chatService = {
     ask: async (

@@ -5,6 +5,8 @@ import { loaderService } from "../loader/loader.service.js";
 import { indexingService } from "../indexing/indexing.service.js";
 import { deleteClonedRepository } from "../clone/git.js";
 
+import { indexingQueue } from "../../queue/indexing.queue.js";
+
 export const repositoryService = {
     create: async (userId: string, githubUrl: string) => {
         const regex = /^https:\/\/github\.com\/([^/]+)\/([^/]+?)(?:\.git)?\/?$/;
@@ -18,20 +20,30 @@ export const repositoryService = {
         
         const repository =  await createRepository(userId, owner, name, githubUrl);
         
-        let repoPath: string | undefined;
-
-        try {
-            repoPath = await cloneService.clone(repository.id, githubUrl);
-            await indexingService.index(repository.id);
-            return repository;
-        } catch (error) {
-            await deleteRepositoryById(repository.id);
-            throw error;
-        } finally {
-            if (repoPath) {
-                await deleteClonedRepository(repoPath);
+        await indexingQueue.add(
+            "index-repository",
+            {
+                repositoryId: repository.id,
+                githubUrl: repository.githubUrl,
             }
-        }
+        );
+
+        return repository;
+
+        // let repoPath: string | undefined;
+
+        // try {
+        //     repoPath = await cloneService.clone(repository.id, githubUrl);
+        //     await indexingService.index(repository.id);
+        //     return repository;
+        // } catch (error) {
+        //     await deleteRepositoryById(repository.id);
+        //     throw error;
+        // } finally {
+        //     if (repoPath) {
+        //         await deleteClonedRepository(repoPath);
+        //     }
+        // }
         
         // const files = await loaderService.load(repository.id);
 

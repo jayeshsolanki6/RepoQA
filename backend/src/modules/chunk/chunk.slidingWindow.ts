@@ -1,4 +1,4 @@
-import { CodeChunk, RepositoryFile } from "./types.js";
+import { CodeChunk, RepositoryFile } from "./chunk.types.js";
 
 const MAX_CHARS = 3000;        // approx char budget per chunk
 const OVERLAP_LINES = 15;      // lines repeated between consecutive chunks

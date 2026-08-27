@@ -13,6 +13,7 @@ dist
 dist-ssr
 user-flow.md
 *.local
+.env
 
 # Editor directories and files
 .vscode/*
