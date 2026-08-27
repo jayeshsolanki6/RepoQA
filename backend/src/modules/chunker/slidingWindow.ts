@@ -47,8 +47,7 @@ export const createChunks = (file: RepositoryFile): CodeChunk[] => {
 
     // Merge a too-small tail chunk into the previous one instead of
     // pushing a near-duplicate, low-value chunk
-    const isTinyTail =
-      chunkLines.length < MIN_CHUNK_LINES && chunks.length > 0 && endLine >= lines.length;
+    const isTinyTail = chunkLines.length < MIN_CHUNK_LINES && chunks.length > 0 && endLine >= lines.length;
 
     if (isTinyTail) {
       const prev = chunks[chunks.length - 1];

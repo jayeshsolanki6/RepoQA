@@ -1,7 +1,9 @@
 import { ApiError } from "../../utils/ApiError.js";
 import { createRepository, deleteRepositoryById, getRepositoriesByUserId, getRepositoryById } from "./repository.repository.js";
-import { ingestionService } from '../../features/ingestion/ingestion.service.js'
-import { loaderService } from "../../features/loader/loader.service.js";
+import { cloneService } from '../clone/clone.service.js'
+import { loaderService } from "../loader/loader.service.js";
+import { indexingService } from "../indexing/indexing.service.js";
+import { deleteClonedRepository } from "../clone/git.js";
 
 export const repositoryService = {
     create: async (userId: string, githubUrl: string) => {
@@ -16,21 +18,27 @@ export const repositoryService = {
         
         const repository =  await createRepository(userId, owner, name, githubUrl);
         
+        let repoPath: string | undefined;
+
         try {
-            await ingestionService.ingest(repository.id, githubUrl);
-            
+            repoPath = await cloneService.clone(repository.id, githubUrl);
+            await indexingService.index(repository.id);
+            return repository;
         } catch (error) {
             await deleteRepositoryById(repository.id);
             throw error;
+        } finally {
+            if (repoPath) {
+                await deleteClonedRepository(repoPath);
+            }
         }
         
-        const files = await loaderService.load(repository.id);
+        // const files = await loaderService.load(repository.id);
+
+        // console.log("----------------");
+        // console.log(files[0].content);
+        // console.log("----------------");
         
-        console.log("----------------");
-        console.log(files[0].content);
-        console.log("----------------");
-        
-        return repository;
     },
 
     getAll: async (userId: string) => {

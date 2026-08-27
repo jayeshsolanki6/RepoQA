@@ -1,3 +1,3 @@
-export interface CreateRepositoryInput {
-    githubUrl: string;
-}
+// export interface CreateRepositoryInput {
+//     githubUrl: string;
+// }
