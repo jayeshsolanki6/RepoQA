@@ -1,18 +1,12 @@
 import { Router } from "express";
 
-import { authenticate } from "../../middleware/authenticate.js"
-
-import {
-    streamProgress,
-} from "./progress.controller.js";
+import { streamProgress } from "./progress.controller.js";
+import { authenticateSSE } from "../../middleware/authenticateSSE.js";
 
 const router = Router();
 
-router.use(authenticate);
+router.use(authenticateSSE);
 
-router.get(
-    "/repositories/:repositoryId/progress",
-    streamProgress
-);
+router.get("/repositories/:repositoryId/progress", streamProgress);
 
 export default router;

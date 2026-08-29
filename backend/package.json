@@ -27,7 +27,6 @@
     "ioredis": "^6.0.0",
     "jsonwebtoken": "^9.0.3",
     "pg": "^8.22.0",
-    "pgvector": "^0.3.0",
     "simple-git": "^3.36.0",
     "zod": "^4.4.3"
   },
