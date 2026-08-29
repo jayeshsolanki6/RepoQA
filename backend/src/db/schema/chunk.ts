@@ -3,7 +3,7 @@ import { repositories } from "./repositories.js";
 
 export const codeChunks = pgTable("code_chunks", {
     id: uuid().notNull().defaultRandom().primaryKey(),
-    repositoryId: uuid().references(
+    repositoryId: uuid().notNull().references(
         () => repositories.id, 
         { onDelete: "cascade" }
     ),

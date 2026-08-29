@@ -1,4 +1,4 @@
-import { desc, eq } from "drizzle-orm";
+import { desc, eq, and, asc } from "drizzle-orm";
 import { db } from "../../db/index.js";
 import { conversations, messages } from "../../db/schema/index.js";
 
@@ -61,4 +61,33 @@ export const getRecentMessages = async (
         .limit(limit);
 
     return result.reverse();
+};
+
+export const getConversationsByRepository = async (
+    userId: string,
+    repositoryId: string
+) => {
+    return await db
+        .select()
+        .from(conversations)
+        .where(
+            and(
+                eq(conversations.userId, userId),
+                eq(conversations.repositoryId, repositoryId)
+            )
+        )
+        .orderBy(desc(conversations.createdAt));
+};
+
+export const getAllMessages = async (conversationId: string) => {
+    return await db
+        .select({
+            id: messages.id,
+            role: messages.role,
+            content: messages.content,
+            createdAt: messages.createdAt,
+        })
+        .from(messages)
+        .where(eq(messages.conversationId, conversationId))
+        .orderBy(asc(messages.createdAt));
 };

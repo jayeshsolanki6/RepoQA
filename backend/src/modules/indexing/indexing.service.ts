@@ -1,7 +1,7 @@
 import { loaderService } from "../loader/loader.service.js";
 import { chunkService } from "../chunk/chunk.service.js";
 import { embeddingService } from "./embedding.service.js";
-import { saveChunks } from "./chunk.repository.js";
+import { saveChunks } from "../chunk/chunk.repository.js";
 
 const BATCH_SIZE = 50;
 

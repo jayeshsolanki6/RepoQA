@@ -6,9 +6,9 @@ import { create, getAll, getOne, remove } from "./repository.controller.js";
 
 const router = Router();
 
-// router.use(authenticate);
+router.use(authenticate);
 
-router.post("/", authenticate, validate(createRepositorySchema, "body"), create);
+router.post("/", validate(createRepositorySchema, "body"), create);
 router.get("/", getAll);
 router.get("/:id", getOne);
 router.delete("/:id", remove);

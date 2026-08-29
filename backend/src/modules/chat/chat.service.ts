@@ -1,6 +1,6 @@
 import { ApiError } from "../../utils/ApiError.js";
 
-import { getConversation, getRecentMessages, saveMessage } from "./chat.repository.js";
+import { getAllMessages, getConversation, getConversationsByRepository, getRecentMessages, saveMessage } from "./chat.repository.js";
 
 import { retrievalService } from "../retrieval/retrieval.service.js";
 import { llmService } from "./chat.llm.js";
@@ -61,5 +61,19 @@ export const chatService = {
                 endLine: chunk.endLine,
             })),
         };
+    },
+
+    listConversations: async (userId: string, repositoryId: string) => {
+        return await getConversationsByRepository(userId, repositoryId);
+    },
+
+    getMessages: async (userId: string, conversationId: string) => {
+        const conversation = await getConversation(conversationId);
+
+        if (!conversation || conversation.userId !== userId) {
+            throw new ApiError(404, "Conversation not found");
+        }
+
+        return await getAllMessages(conversationId);
     },
 };

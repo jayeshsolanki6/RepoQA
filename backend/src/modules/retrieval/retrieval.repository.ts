@@ -1,4 +1,4 @@
-import { desc, eq, gt, cosineDistance } from "drizzle-orm";
+import { eq, and, cosineDistance, lt } from "drizzle-orm";
 import { db } from "../../db/index.js";
 import { codeChunks } from "../../db/schema/index.js";
 
@@ -24,7 +24,10 @@ export const findSimilarChunks = async (
         })
         .from(codeChunks)
         .where(
-            eq(codeChunks.repositoryId, repositoryId)
+            and(
+                eq(codeChunks.repositoryId, repositoryId),
+                lt(distance, 0.5) //lower cosine distance = more similar
+            )
         )
         .orderBy(distance)
         .limit(limit);

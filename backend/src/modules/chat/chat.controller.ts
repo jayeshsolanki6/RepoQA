@@ -62,3 +62,45 @@ export const createChat = async (
         next(error);
     }
 };
+
+export const listConversations = async (
+  req: Request,
+  res: Response,
+  next: NextFunction
+) => {
+  try {
+    const repositoryId = req.params.repositoryId as string;
+
+    const conversations = await chatService.listConversations(
+      req.user.userId,
+      repositoryId
+    );
+
+    res.status(200).json(
+      new ApiResponse("Conversations fetched successfully", conversations)
+    );
+  } catch (error) {
+    next(error);
+  }
+};
+
+export const getMessages = async (
+  req: Request,
+  res: Response,
+  next: NextFunction
+) => {
+  try {
+    const conversationId = req.params.conversationId as string;
+
+    const messages = await chatService.getMessages(
+      req.user.userId,
+      conversationId
+    );
+
+    res.status(200).json(
+      new ApiResponse("Messages fetched successfully", messages)
+    );
+  } catch (error) {
+    next(error);
+  }
+};
