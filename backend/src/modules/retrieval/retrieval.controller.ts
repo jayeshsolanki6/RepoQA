@@ -1,4 +1,4 @@
-import { NextFunction, Request, Response } from "express";
+import type { NextFunction, Request, Response } from "express";
 import { retrievalService } from "./retrieval.service.js";
 import { ApiResponse } from "../../utils/ApiResponse.js";
 

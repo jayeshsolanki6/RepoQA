@@ -1,4 +1,4 @@
-import { NextFunction, Request, Response } from "express";
+import type { NextFunction, Request, Response } from "express";
 import { ApiError } from "../utils/ApiError.js";
 import { verifyAccessToken } from "../utils/jwt.js";
 import { getUserById } from "../modules/auth/auth.repository.js";

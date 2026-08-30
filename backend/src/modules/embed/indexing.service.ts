@@ -1,6 +1,6 @@
 import { loaderService } from "../loader/loader.service.js";
 import { chunkService } from "../chunk/chunk.service.js";
-import { embeddingService } from "./embedding.service.js";
+import { generateEmbedding, generateEmbeddings } from "./embedding.service.js";
 import { saveChunks } from "../chunk/chunk.repository.js";
 
 const BATCH_SIZE = 50;
@@ -50,7 +50,7 @@ export const indexingService = {
             );
 
             const embeddings =
-                await embeddingService.generateEmbeddings(
+                await generateEmbeddings(
                     batch.map((chunk) => chunk.content)
                 );
 

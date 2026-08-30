@@ -1,0 +1,165 @@
+@import "tailwindcss";
+
+/*
+ * Design tokens. Declaring them in @theme makes them available both as CSS
+ * variables and as Tailwind utilities (bg-surface, border-line, text-accent…),
+ * so the palette lives in one place instead of being retyped as hex literals.
+ */
+@theme {
+  --color-ink: #0a0c0b;
+  --color-surface: #0d100f;
+  --color-surface-2: #101311;
+  --color-line: oklch(1 0 0 / 10%);
+  /* Same value as Tailwind's lime-300, which the rest of the UI already uses,
+     so `accent` and `lime-300` can never drift apart. */
+  --color-accent: #bef264;
+  /* Code blocks sit below the page background so they read as insets. */
+  --color-code: #070908;
+
+  --font-sans: "Inter", ui-sans-serif, system-ui, -apple-system, "Segoe UI", sans-serif;
+  --font-mono: "JetBrains Mono", ui-monospace, "SFMono-Regular", Consolas, monospace;
+}
+
+:root {
+  font-family: var(--font-sans);
+  color: #eaf0ee;
+  background: var(--color-ink);
+  color-scheme: dark;
+  font-synthesis: none;
+  text-rendering: optimizeLegibility;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  /* Slightly tighter tracking is what makes Inter read as a product UI. */
+  letter-spacing: -0.011em;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html,
+body,
+#root {
+  min-height: 100%;
+}
+
+body {
+  margin: 0;
+  min-width: 320px;
+  background:
+    radial-gradient(circle at 15% 0%, rgba(190, 242, 100, 0.05), transparent 24%),
+    radial-gradient(circle at 85% 10%, rgba(190, 242, 100, 0.035), transparent 18%),
+    var(--color-ink);
+}
+
+button,
+input,
+textarea {
+  font: inherit;
+  letter-spacing: inherit;
+}
+
+button:not(:disabled) {
+  cursor: pointer;
+}
+
+/* One consistent keyboard-focus treatment for every interactive element.
+   The outline follows each element's own border-radius, so no radius here. */
+:focus-visible {
+  outline: 2px solid rgba(190, 242, 100, 0.6);
+  outline-offset: 2px;
+}
+
+::selection {
+  background: rgba(190, 242, 100, 0.28);
+  color: #fff;
+}
+
+::-webkit-scrollbar {
+  width: 9px;
+  height: 9px;
+}
+::-webkit-scrollbar-track {
+  background: #0b0d0c;
+}
+::-webkit-scrollbar-thumb {
+  background: #252b27;
+  border-radius: 999px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: #333a35;
+}
+
+/* Firefox */
+* {
+  scrollbar-width: thin;
+  scrollbar-color: #252b27 transparent;
+}
+
+.grid-bg {
+  background-image:
+    linear-gradient(rgba(255, 255, 255, 0.024) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(255, 255, 255, 0.024) 1px, transparent 1px);
+  background-size: 48px 48px;
+  /* Fade the grid out instead of ending on a hard line. */
+  -webkit-mask-image: linear-gradient(to bottom, #000 0%, #000 45%, transparent 100%);
+  mask-image: linear-gradient(to bottom, #000 0%, #000 45%, transparent 100%);
+}
+
+.code-font {
+  font-family: var(--font-mono);
+  letter-spacing: 0;
+}
+
+/* Skeleton placeholder used while lists load. */
+.skeleton {
+  background: linear-gradient(
+    90deg,
+    rgba(255, 255, 255, 0.035) 25%,
+    rgba(255, 255, 255, 0.075) 37%,
+    rgba(255, 255, 255, 0.035) 63%
+  );
+  background-size: 400% 100%;
+  animation: skeleton-sweep 1.4s ease-in-out infinite;
+}
+
+@keyframes skeleton-sweep {
+  from {
+    background-position: 100% 50%;
+  }
+  to {
+    background-position: 0 50%;
+  }
+}
+
+/* Dialog entrance. Small, fast, and easing-out — enough to feel deliberate. */
+@keyframes overlay-in {
+  from {
+    opacity: 0;
+  }
+}
+
+@keyframes panel-in {
+  from {
+    opacity: 0;
+    transform: translateY(8px) scale(0.98);
+  }
+}
+
+.animate-overlay-in {
+  animation: overlay-in 150ms ease-out;
+}
+
+.animate-panel-in {
+  animation: panel-in 190ms cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+}

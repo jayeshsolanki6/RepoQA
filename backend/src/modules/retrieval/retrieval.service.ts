@@ -1,4 +1,4 @@
-import { embeddingService } from "../indexing/embedding.service.js";
+import { generateEmbedding } from "../embed/embedding.service.js";
 import { findSimilarChunks } from "./retrieval.repository.js";
 import { ApiError } from "../../utils/ApiError.js";
 import { getRepositoryById } from "../repository/repository.repository.js";
@@ -20,7 +20,7 @@ export const retrievalService = {
         }
 
         const queryEmbedding =
-            await embeddingService.generateEmbedding(question);
+            await generateEmbedding(question);
 
         const chunks = await findSimilarChunks(
             repositoryId,

@@ -3,7 +3,7 @@ import { Worker } from "bullmq";
 import { redisConnection } from "./connection.js";
 
 import { cloneService } from "../modules/clone/clone.service.js";
-import { indexingService } from "../modules/indexing/indexing.service.js";
+import { indexingService } from "../modules/embed/indexing.service.js";
 import { deleteClonedRepository } from "../modules/clone/git.js";
 
 import {

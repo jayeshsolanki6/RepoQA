@@ -1,4 +1,4 @@
-import { NextFunction, Request, Response } from "express";
+import type { NextFunction, Request, Response } from "express";
 
 import { ApiError } from "../utils/ApiError.js";
 import { verifyRefreshToken } from "../utils/jwt.js";

@@ -24,10 +24,10 @@ export const findSimilarChunks = async (
         })
         .from(codeChunks)
         .where(
-            and(
+            // and(
                 eq(codeChunks.repositoryId, repositoryId),
-                lt(distance, 0.5) //lower cosine distance = more similar
-            )
+            //     lt(distance, 0.5) //lower cosine distance = more similar
+            // )
         )
         .orderBy(distance)
         .limit(limit);

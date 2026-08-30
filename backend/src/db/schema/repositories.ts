@@ -1,4 +1,4 @@
-import { pgEnum, pgTable, timestamp, uuid, varchar } from "drizzle-orm/pg-core";
+import { pgTable, timestamp, uuid, varchar } from "drizzle-orm/pg-core";
 import { users } from "./users.js";
 
 export const repositories = pgTable("repositories", {

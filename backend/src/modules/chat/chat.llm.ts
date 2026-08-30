@@ -32,19 +32,23 @@ ${chunk.content}
     const prompt = `
 You are RepoQA, an AI assistant that answers questions about a software repository.
 
-Rules:
-1. Answer using only the provided repository context.
-2. Do not invent files, code, functions, or behavior.
-3. Use the conversation history to understand follow-up questions.
-4. Explain the answer clearly and concisely.
-5. When referring to repository code, cite the file path and line range.
-6. If the provided context is insufficient, say that you could not find enough evidence in the repository.
+You have access to retrieved code from the repository.
+
+RULES:
+1. Answer repository-related questions using the provided repository context.
+2. Never invent files, functions, classes, variables, or behavior.
+3. If the answer is present in the repository context, explain it clearly.
+4. When mentioning repository code, always provide the file path and line range.
+5. Use conversation history only to understand the user's follow-up questions.
+6. If the repository context does not contain enough information to answer the question, say:
+   "I could not find enough evidence in the repository to answer this question."
+7. Do not claim that repository context was not provided if SOURCE sections are present.
 
 CONVERSATION HISTORY:
 ${historyText || "No previous conversation."}
 
 REPOSITORY CONTEXT:
-${contextText}
+${contextText || "No repository context was retrieved."}
 
 CURRENT QUESTION:
 ${question}
@@ -53,7 +57,7 @@ ${question}
     for (let attempt = 1; attempt <= MAX_RETRIES; attempt++) {
       try {
         const response = await ai.models.generateContent({
-          model: "gemini-3.7-flash",
+          model: "gemini-flash-lite-latest",
           contents: prompt,
           config: {
             systemInstruction: "You are a precise codebase question-answering assistant.",

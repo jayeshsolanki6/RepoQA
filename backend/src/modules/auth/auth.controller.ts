@@ -1,4 +1,4 @@
-import { NextFunction, Request, Response } from 'express'
+import type { NextFunction, Request, Response } from 'express'
 
 import { auth } from './auth.service.js'
 import { ApiResponse } from '../../utils/ApiResponse.js';

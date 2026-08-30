@@ -13,6 +13,6 @@ export const codeChunks = pgTable("code_chunks", {
     endLine: integer().notNull(),
     content: text().notNull(),
     embedding: vector("embedding", {
-        dimensions: 3072,
+        dimensions: 768,
     }).notNull(),
 });
