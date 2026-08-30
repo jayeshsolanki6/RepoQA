@@ -1,3 +1,4 @@
+import { useAuthStore } from '@/features/auth/authStore';
 import type { ProgressEvent } from '@/types/api';
 
 const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000/api';
@@ -40,10 +41,15 @@ export async function streamProgress(
   handlers: ProgressHandlers,
   signal: AbortSignal,
 ) {
+  const accessToken = useAuthStore.getState().accessToken;
+
   const response = await fetch(`${API_URL}/repositories/${repositoryId}/progress`, {
     method: 'GET',
     credentials: 'include',
-    headers: { Accept: 'text/event-stream' },
+    headers: {
+      Accept: 'text/event-stream',
+      ...(accessToken ? { Authorization: `Bearer ${accessToken}` } : {}),
+    },
     signal,
   });
 
