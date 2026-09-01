@@ -91,7 +91,18 @@ export function DashboardPage() {
       {/* Delete confirmation modal */}
       {confirmDeleteRepo && (
         <DeleteModal
-          repositoryName={`${confirmDeleteRepo.owner}/${confirmDeleteRepo.name}`}
+          title="Delete repository?"
+          message={
+            <>
+              This permanently deletes{' '}
+              <span className="code-font font-semibold text-white">
+                {confirmDeleteRepo.owner}/{confirmDeleteRepo.name}
+              </span>{' '}
+              along with its indexed embeddings, conversations, and messages.
+              <span className="mt-1 block text-slate-500">This action cannot be undone.</span>
+            </>
+          }
+          confirmLabel="Delete repository"
           loading={Boolean(deletingId)}
           onConfirm={() => void confirmDelete()}
           onCancel={cancelDelete}

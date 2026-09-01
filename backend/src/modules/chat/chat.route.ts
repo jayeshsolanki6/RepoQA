@@ -1,7 +1,7 @@
 import { Router } from "express";
 
 import { authenticate } from "../../middleware/authenticate.js"
-import { ask, createChat, getMessages, listConversations } from "./chat.controller.js";
+import { ask, createChat, getMessages, listConversations, remove } from "./chat.controller.js";
 import { validate } from "../../middleware/validate.js";
 import { askSchema } from "./chat.validation.js";
 
@@ -16,5 +16,7 @@ router.post("/repositories/:repositoryId/conversations", createChat);
 router.get("/repositories/:repositoryId/conversations", listConversations);
 
 router.get("/conversations/:conversationId/messages", getMessages);
+
+router.delete("/conversations/:conversationId", remove);
 
 export default router;

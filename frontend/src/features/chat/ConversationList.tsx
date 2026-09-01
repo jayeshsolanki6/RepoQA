@@ -1,4 +1,4 @@
-import { MessageSquare, Plus } from 'lucide-react';
+import { MessageSquare, Plus, Trash2 } from 'lucide-react';
 import { Spinner } from '@/components/Spinner';
 import type { Conversation } from '@/types/api';
 
@@ -7,7 +7,9 @@ interface Props {
   activeId: string | null;
   onSelect: (conversation: Conversation) => void;
   onNew: () => void;
+  onDelete: (conversation: Conversation) => void;
   creating?: boolean;
+  deletingId?: string | null;
   disabled?: boolean;
 }
 
@@ -40,7 +42,9 @@ export function ConversationList({
   activeId,
   onSelect,
   onNew,
+  onDelete,
   creating = false,
+  deletingId = null,
   disabled = false,
 }: Props) {
   return (
@@ -75,26 +79,45 @@ export function ConversationList({
           conversations.map((conversation) => {
             const active = conversation.id === activeId;
             const started = formatStarted(conversation.createdAt);
+            const deleting = deletingId === conversation.id;
 
             return (
-              <button
-                type="button"
+              <div
                 key={conversation.id}
-                onClick={() => onSelect(conversation)}
-                disabled={disabled && !active}
-                aria-current={active ? 'true' : undefined}
-                className={`flex min-w-[165px] items-center gap-2 rounded-lg border px-3 py-2 text-left transition disabled:cursor-not-allowed disabled:opacity-40 md:min-w-0 ${
+                className={`group flex min-w-[165px] items-center gap-1 rounded-lg border py-1 pl-1 pr-1.5 transition md:min-w-0 ${
                   active
-                    ? 'border-line bg-white/[0.045] text-white'
-                    : 'border-transparent text-slate-500 hover:bg-white/[0.03] hover:text-slate-300'
+                    ? 'border-line bg-white/[0.045]'
+                    : 'border-transparent hover:bg-white/[0.03]'
                 }`}
               >
-                <MessageSquare
-                  size={13}
-                  className={`shrink-0 ${active ? 'text-lime-300' : 'text-slate-700'}`}
-                />
-                <span className="min-w-0 truncate text-xs">{started || 'Conversation'}</span>
-              </button>
+                <button
+                  type="button"
+                  onClick={() => onSelect(conversation)}
+                  disabled={(disabled && !active) || deleting}
+                  aria-current={active ? 'true' : undefined}
+                  className={`flex min-w-0 flex-1 items-center gap-2 rounded-md px-2 py-1.5 text-left transition disabled:cursor-not-allowed disabled:opacity-40 ${
+                    active ? 'text-white' : 'text-slate-500 hover:text-slate-300'
+                  }`}
+                >
+                  <MessageSquare
+                    size={13}
+                    className={`shrink-0 ${active ? 'text-lime-300' : 'text-slate-700'}`}
+                  />
+                  <span className="min-w-0 truncate text-xs">{started || 'Conversation'}</span>
+                </button>
+                <button
+                  type="button"
+                  onClick={() => onDelete(conversation)}
+                  disabled={disabled || deleting}
+                  className={`grid h-7 w-7 shrink-0 place-items-center rounded-lg border border-red-400/20 bg-red-400/[0.04] text-red-400 transition hover:border-red-400/40 hover:bg-red-400/[0.09] hover:text-red-300 disabled:cursor-not-allowed disabled:opacity-40 md:opacity-0 md:focus-visible:opacity-100 md:group-hover:opacity-100 ${
+                    active ? 'md:opacity-100' : ''
+                  }`}
+                  title="Delete conversation"
+                  aria-label="Delete conversation"
+                >
+                  {deleting ? <Spinner size="sm" /> : <Trash2 size={13} />}
+                </button>
+              </div>
             );
           })
         )}

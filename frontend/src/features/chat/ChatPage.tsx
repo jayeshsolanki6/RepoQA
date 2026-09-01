@@ -10,6 +10,7 @@ import { chatApi } from './chat.api';
 import { ConversationList } from './ConversationList';
 import { MessageBubble, type ChatMessage } from './MessageBubble';
 import { getApiError } from '@/lib/axios';
+import { DeleteModal } from '@/components/DeleteModal';
 import type { Conversation, Repository } from '@/types/api';
 
 const MAX_COMPOSER_HEIGHT = 160;
@@ -40,6 +41,8 @@ export function ChatPage() {
   const [messagesLoading, setMessagesLoading] = useState(false);
   const [creating, setCreating] = useState(false);
   const [sending, setSending] = useState(false);
+  const [deletingId, setDeletingId] = useState<string | null>(null);
+  const [confirmDeleteConversation, setConfirmDeleteConversation] = useState<Conversation | null>(null);
   const [error, setError] = useState('');
 
   /**
@@ -241,6 +244,48 @@ export function ChatPage() {
     await sendQuestion();
   };
 
+  const requestDeleteConversation = (conversation: Conversation) => {
+    if (deletingId || sending) return;
+    setConfirmDeleteConversation(conversation);
+  };
+
+  const cancelDeleteConversation = () => {
+    if (deletingId) return; // don't allow cancel mid-delete
+    setConfirmDeleteConversation(null);
+  };
+
+  const confirmDeleteConversationHandler = async () => {
+    if (!confirmDeleteConversation) return;
+    const target = confirmDeleteConversation;
+
+    try {
+      setDeletingId(target.id);
+      await chatApi.deleteConversation(target.id);
+
+      const remaining = conversations.filter((item) => item.id !== target.id);
+      setConversations(remaining);
+
+      // If the deleted thread was open, fall back to the next conversation
+      // (the list is newest-first) or the empty state when none remain.
+      if (activeIdRef.current === target.id) {
+        const next = remaining[0];
+        if (next) {
+          await selectConversation(next);
+        } else {
+          setActive(null);
+          setMessages([]);
+        }
+      }
+
+      toast.success('Conversation deleted');
+      setConfirmDeleteConversation(null);
+    } catch (err) {
+      toast.error(getApiError(err, 'Could not delete conversation'));
+    } finally {
+      setDeletingId(null);
+    }
+  };
+
   if (!repositoryId) {
     return (
       <main className="mx-auto max-w-2xl px-5 py-10">
@@ -270,13 +315,32 @@ export function ChatPage() {
 
   return (
     <main className="mx-auto flex h-[calc(100dvh-4rem)] w-full max-w-[1400px] flex-col overflow-hidden px-3 pb-3 sm:px-5">
+      {/* Delete conversation confirmation modal */}
+      {confirmDeleteConversation && (
+        <DeleteModal
+          title="Delete conversation?"
+          message={
+            <>
+              This permanently deletes this conversation along with all of its messages.
+              <span className="mt-1 block text-slate-500">This action cannot be undone.</span>
+            </>
+          }
+          confirmLabel="Delete conversation"
+          loading={Boolean(deletingId)}
+          onConfirm={() => void confirmDeleteConversationHandler()}
+          onCancel={cancelDeleteConversation}
+        />
+      )}
+
       <div className="flex min-h-0 flex-1 flex-col overflow-hidden rounded-2xl border border-line bg-surface md:flex-row">
         <ConversationList
           conversations={conversations}
           activeId={activeConversation?.id ?? null}
           onSelect={(conversation) => void selectConversation(conversation)}
           onNew={() => void startNewConversation()}
+          onDelete={requestDeleteConversation}
           creating={creating}
+          deletingId={deletingId}
           disabled={sending}
         />
 

@@ -1,16 +1,22 @@
+import type { ReactNode } from 'react';
 import { useEffect } from 'react';
 import { AlertTriangle, Trash2, X } from 'lucide-react';
 import { Button } from '@/components/ui/Button';
 
 interface DeleteModalProps {
-  repositoryName: string;
+  title: string;
+  /** Confirmation body. May include styled spans for emphasised names. */
+  message: ReactNode;
+  confirmLabel?: string;
   onConfirm: () => void;
   onCancel: () => void;
   loading?: boolean;
 }
 
 export function DeleteModal({
-  repositoryName,
+  title,
+  message,
+  confirmLabel = 'Delete',
   onConfirm,
   onCancel,
   loading = false,
@@ -63,15 +69,10 @@ export function DeleteModal({
           </div>
 
           <h2 id="delete-modal-title" className="text-lg font-semibold tracking-tight text-white">
-            Delete repository?
+            {title}
           </h2>
 
-          <p className="mt-2 text-sm leading-6 text-slate-400">
-            This permanently deletes{' '}
-            <span className="code-font font-semibold text-white">{repositoryName}</span> along with
-            its indexed embeddings, conversations, and messages.
-            <span className="mt-1 block text-slate-500">This action cannot be undone.</span>
-          </p>
+          <p className="mt-2 text-sm leading-6 text-slate-400">{message}</p>
 
           <div className="mt-6 flex items-center justify-end gap-3">
             <Button
@@ -91,7 +92,7 @@ export function DeleteModal({
               className="px-4 py-2.5 text-sm"
             >
               {!loading && <Trash2 size={14} />}
-              Delete repository
+              {confirmLabel}
             </Button>
           </div>
         </div>

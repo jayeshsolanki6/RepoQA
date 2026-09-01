@@ -1,6 +1,6 @@
 import { ApiError } from "../../utils/ApiError.js";
 
-import { getAllMessages, getConversation, getConversationsByRepository, getRecentMessages, saveMessage } from "./chat.repository.js";
+import { deleteConversationById, getAllMessages, getConversation, getConversationsByRepository, getRecentMessages, saveMessage } from "./chat.repository.js";
 
 import { retrievalService } from "../retrieval/retrieval.service.js";
 import { llmService } from "./chat.llm.js";
@@ -75,5 +75,16 @@ export const chatService = {
         }
 
         return await getAllMessages(conversationId);
+    },
+
+    deleteConversation: async (userId: string, conversationId: string) => {
+        const conversation = await getConversation(conversationId);
+
+        if (!conversation || conversation.userId !== userId) {
+            throw new ApiError(404, "Conversation not found");
+        }
+
+        // Messages cascade via the messages_conversationId foreign key.
+        await deleteConversationById(conversationId);
     },
 };

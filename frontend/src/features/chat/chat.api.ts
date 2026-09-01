@@ -14,6 +14,9 @@ export const chatApi = {
     const response = await api.get<ApiResponse<Message[]>>(`/conversations/${conversationId}/messages`);
     return response.data.data;
   },
+  deleteConversation: async (conversationId: string) => {
+    await api.delete(`/conversations/${conversationId}`);
+  },
   ask: async (repositoryId: string, conversationId: string, question: string) => {
     const response = await api.post<ApiResponse<ChatResult>>(`/repositories/${repositoryId}/ask`, { conversationId, question });
     return response.data.data;

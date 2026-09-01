@@ -91,3 +91,9 @@ export const getAllMessages = async (conversationId: string) => {
         .where(eq(messages.conversationId, conversationId))
         .orderBy(asc(messages.createdAt));
 };
+
+export const deleteConversationById = async (conversationId: string) => {
+    await db
+        .delete(conversations)
+        .where(eq(conversations.id, conversationId));
+};

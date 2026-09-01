@@ -104,3 +104,24 @@ export const getMessages = async (
         next(error);
     }
 };
+
+export const remove = async (
+    req: Request,
+    res: Response,
+    next: NextFunction
+) => {
+    try {
+        const conversationId = req.params.conversationId as string;
+
+        await chatService.deleteConversation(
+            req.user.userId,
+            conversationId
+        );
+
+        res.status(200).json(
+            new ApiResponse("Conversation deleted successfully", null)
+        );
+    } catch (error) {
+        next(error);
+    }
+};
