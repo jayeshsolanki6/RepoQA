@@ -8,6 +8,12 @@ export function AppHeader() {
   const location = useLocation();
   const user = useAuthStore((state) => state.user);
   const logout = useAuthStore((state) => state.logout);
+  /**
+   * True until the session restore (`refresh()`) settles. Rendering the
+   * logged-out links during that window made the header flash "Sign in /
+   * Create account" for a second before switching to the dashboard controls.
+   */
+  const isRestoring = useAuthStore((state) => state.isLoading);
 
   const isDashboard = location.pathname === '/dashboard';
   const onLogin = location.pathname === '/login';
@@ -23,8 +29,19 @@ export function AppHeader() {
       <div className="mx-auto flex h-16 max-w-[1400px] items-center justify-between gap-3 px-5 sm:px-8">
         <Logo />
 
-        {user ? (
-          <div className="flex items-center gap-2">
+        {isRestoring ? (
+          /*
+           * Skeleton pills sized like the controls they will resolve into
+           * (auth links or dashboard controls). Shimmer reads as "loading",
+           * where an empty gap read as broken layout — and the crossfade
+           * into the real content removes the pop.
+           */
+          <div className="flex items-center gap-2" aria-busy="true" aria-label="Restoring session">
+            <div className="skeleton h-9 w-20 rounded-lg" />
+            <div className="skeleton hidden h-9 w-28 rounded-lg sm:block" />
+          </div>
+        ) : user ? (
+          <div className="animate-fade-in flex items-center gap-2">
             {!isDashboard && (
               <button
                 type="button"
@@ -56,7 +73,7 @@ export function AppHeader() {
            * landing page had no way into the app. Links are contextual so the
            * auth pages don't advertise the page you are already on.
            */
-          <nav className="flex items-center gap-1.5">
+          <nav className="animate-fade-in flex items-center gap-1.5">
             {!onLogin && (
               <Link
                 to="/login"

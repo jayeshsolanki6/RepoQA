@@ -154,6 +154,21 @@ button:not(:disabled) {
   animation: panel-in 190ms cubic-bezier(0.22, 1, 0.36, 1);
 }
 
+/*
+ * Content that replaces a skeleton once an async state resolves. Without it,
+ * the skeleton-to-content swap reads as a pop; a short crossfade makes the
+ * handover feel intentional.
+ */
+@keyframes fade-in {
+  from {
+    opacity: 0;
+  }
+}
+
+.animate-fade-in {
+  animation: fade-in 220ms ease-out;
+}
+
 @media (prefers-reduced-motion: reduce) {
   *,
   *::before,

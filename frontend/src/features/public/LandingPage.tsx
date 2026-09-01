@@ -3,7 +3,7 @@ import { ArrowRight, Check, Github, Search, Sparkles } from 'lucide-react';
 import { Link, useNavigate } from 'react-router-dom';
 import { toast } from 'sonner';
 import { repositoryApi } from '@/features/repository/repository.api';
-import { useAuthStore } from '@/features/auth/authStore';
+import { useAuth } from '@/hooks/useAuth';
 import { getApiError } from '@/lib/axios';
 import { Input } from '@/components/ui/Input';
 import { Button } from '@/components/ui/Button';
@@ -18,7 +18,12 @@ const EXAMPLE_REPOS = ['expressjs/express', 'drizzle-team/drizzle-orm', 'faceboo
 
 export function LandingPage() {
   const navigate = useNavigate();
-  const user = useAuthStore((state) => state.user);
+  /**
+   * `isLoading` is true until the session restore settles. Branching on `user`
+   * alone made the page flash the logged-out CTA ("Get started", the sign-in
+   * note) for a second before switching to the logged-in one.
+   */
+  const { user, isLoading: isRestoring } = useAuth();
   const [githubUrl, setGithubUrl] = useState('');
   const [loading, setLoading] = useState(false);
 
@@ -88,7 +93,19 @@ export function LandingPage() {
                 onClick={() => void start()}
                 className="h-13 rounded-xl px-6"
               >
-                <Sparkles size={16} /> {user ? 'Index & chat' : 'Get started'}
+                <Sparkles size={16} />
+                {/*
+                  While the session restores, a shimmer bar sized like the
+                  eventual label keeps the button from reflowing when the
+                  real text swaps in.
+                */}
+                {isRestoring ? (
+                  <span className="skeleton h-3.5 w-24 rounded" />
+                ) : user ? (
+                  'Index & chat'
+                ) : (
+                  'Get started'
+                )}
               </Button>
             </div>
           </div>
@@ -107,8 +124,8 @@ export function LandingPage() {
             ))}
           </div>
 
-          {!user && (
-            <p className="mt-3 text-xs text-slate-600">
+          {!isRestoring && !user && (
+            <p className="animate-fade-in mt-3 text-xs text-slate-600">
               You will be asked to create a free account first —{' '}
               <Link to="/login" className="text-lime-300 hover:text-lime-200">
                 or sign in
@@ -171,17 +188,23 @@ export function LandingPage() {
           <span className="inline-flex items-center gap-2">
             <Check size={15} className="text-lime-300" /> Gemini + pgvector
           </span>
-          {user ? (
+          {isRestoring ? (
+            /*
+             * Occupies the same right-aligned slot as the link it resolves
+             * into, so the row's rhythm doesn't jump when the text lands.
+             */
+            <span className="skeleton ml-auto h-5 w-32 rounded-md" aria-busy="true" />
+          ) : user ? (
             <Link
               to="/dashboard"
-              className="ml-auto inline-flex items-center gap-2 text-lime-300 hover:text-lime-200"
+              className="animate-fade-in ml-auto inline-flex items-center gap-2 text-lime-300 hover:text-lime-200"
             >
               Go to dashboard <ArrowRight size={15} />
             </Link>
           ) : (
             <Link
               to="/register"
-              className="ml-auto inline-flex items-center gap-2 text-lime-300 hover:text-lime-200"
+              className="animate-fade-in ml-auto inline-flex items-center gap-2 text-lime-300 hover:text-lime-200"
             >
               Create account <ArrowRight size={15} />
             </Link>
