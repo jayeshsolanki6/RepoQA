@@ -9,6 +9,12 @@ export const createChunks = (file: RepositoryFile): CodeChunk[] => {
 
   // Small file → keep it as a single whole chunk, preserves full context
   if (content.length <= MAX_CHARS) {
+    // Empty files (e.g. __init__.py, .gitkeep) produce an empty chunk, which
+    // the Gemini embedding API rejects with 400 "empty Part".
+    if (content.trim().length === 0) {
+      return [];
+    }
+
     return [
       {
         filePath: path,

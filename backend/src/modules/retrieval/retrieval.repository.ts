@@ -1,11 +1,11 @@
-import { eq, and, cosineDistance, lt } from "drizzle-orm";
+import { eq, cosineDistance, and, lt } from "drizzle-orm";
 import { db } from "../../db/index.js";
 import { codeChunks } from "../../db/schema/index.js";
 
 export const findSimilarChunks = async (
     repositoryId: string,
     queryEmbedding: number[],
-    limit: number = 5
+    limit: number = 10
 ) => {
     const distance = cosineDistance(
         codeChunks.embedding,
@@ -24,10 +24,10 @@ export const findSimilarChunks = async (
         })
         .from(codeChunks)
         .where(
-            // and(
+            and(
                 eq(codeChunks.repositoryId, repositoryId),
-            //     lt(distance, 0.5) //lower cosine distance = more similar
-            // )
+                lt(distance, 0.5) //lower cosine distance = more similar
+            )
         )
         .orderBy(distance)
         .limit(limit);

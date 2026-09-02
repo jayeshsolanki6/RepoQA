@@ -9,6 +9,8 @@ export const chunkService = {
       chunks.push(...createChunks(file));
     }
 
-    return chunks;
+    // Defensive: never let an empty-content chunk through — the embedding
+    // API rejects empty strings and would abort the whole indexing job.
+    return chunks.filter((chunk) => chunk.content.trim().length > 0);
   },
 };

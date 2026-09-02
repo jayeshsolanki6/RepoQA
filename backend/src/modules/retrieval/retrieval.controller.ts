@@ -2,11 +2,7 @@ import type { NextFunction, Request, Response } from "express";
 import { retrievalService } from "./retrieval.service.js";
 import { ApiResponse } from "../../utils/ApiResponse.js";
 
-export const search = async (
-    req: Request,
-    res: Response,
-    next: NextFunction
-) => {
+export const search = async (req: Request, res: Response, next: NextFunction) => {
     try {
         const repositoryId = req.params.repositoryId as string;
         const { question } = req.body;

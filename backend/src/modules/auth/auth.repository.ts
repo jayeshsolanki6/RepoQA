@@ -29,11 +29,7 @@ export const getRefreshTokenByUserId = async (userId : string) => {
     return result[0];
 }
 
-export const createUser = async (
-    name : string,
-    email : string,
-    password : string
-) => {
+export const createUser = async (name : string, email : string, password : string) => {
     const result = await db
         .insert(users)
         .values({name, email, password})
@@ -43,11 +39,7 @@ export const createUser = async (
 }
 
 
-export const saveRefreshToken = async (
-    userId : string,
-    hashedToken : string,
-    expiresAt : Date
-) => {
+export const saveRefreshToken = async (userId : string, hashedToken : string, expiresAt : Date) => {
     await db
         .insert(refreshTokens)
         .values({ userId, hashedToken, expiresAt })
@@ -61,9 +53,7 @@ export const saveRefreshToken = async (
 }
 
 
-export const deleteRefreshToken = async (
-    userId : string
-) => {
+export const deleteRefreshToken = async (userId : string) => {
     await db
         .delete(refreshTokens)
         .where(eq(refreshTokens.userId, userId))

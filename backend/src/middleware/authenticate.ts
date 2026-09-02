@@ -4,7 +4,7 @@ import { verifyAccessToken } from "../utils/jwt.js";
 import { getUserById } from "../modules/auth/auth.repository.js";
 
 
-export const authenticate = async(req : Request, res : Response, next : NextFunction) => {
+export const authenticate = async(req : Request, _res : Response, next : NextFunction) => {
     try {
         const authHeader = req.headers.authorization;
 

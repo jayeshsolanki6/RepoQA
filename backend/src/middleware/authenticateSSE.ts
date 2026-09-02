@@ -2,12 +2,10 @@ import type { NextFunction, Request, Response } from "express";
 
 import { ApiError } from "../utils/ApiError.js";
 import { verifyAccessToken, verifyRefreshToken } from "../utils/jwt.js";
-
 import { getRefreshTokenByUserId, getUserById } from "../modules/auth/auth.repository.js";
-
 import { comparePassword } from "../utils/bcrypt.js";
 
-export const authenticateSSE = async (req: Request, res: Response, next: NextFunction) => {
+export const authenticateSSE = async (req: Request, _res: Response, next: NextFunction) => {
     try {
         const authHeader = req.headers.authorization;
         const bearerToken = authHeader?.startsWith("Bearer ") ? authHeader.slice(7) : null;

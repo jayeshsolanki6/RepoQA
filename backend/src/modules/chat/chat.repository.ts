@@ -2,10 +2,7 @@ import { desc, eq, and, asc } from "drizzle-orm";
 import { db } from "../../db/index.js";
 import { conversations, messages } from "../../db/schema/index.js";
 
-export const createConversation = async (
-    userId: string,
-    repositoryId: string
-) => {
+export const createConversation = async (userId: string, repositoryId: string) => {
     const result = await db
         .insert(conversations)
         .values({
@@ -17,9 +14,7 @@ export const createConversation = async (
     return result[0];
 };
 
-export const getConversation = async (
-    conversationId: string
-) => {
+export const getConversation = async (conversationId: string) => {
     const result = await db
         .select()
         .from(conversations)

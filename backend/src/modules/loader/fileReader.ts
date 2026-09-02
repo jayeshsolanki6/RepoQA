@@ -30,9 +30,7 @@ const SUPPORTED_EXTENSIONS = new Set([
     ".yml", ".xml", ".toml", ".sql", ".md", ".mdx", ".txt", ".rst",
 ]);
 
-export const readRepository = async (
-    directory: string
-): Promise<RepositoryFile[]> => {
+export const readRepository = async (directory: string): Promise<RepositoryFile[]> => {
     const files: RepositoryFile[] = [];
 
     await walk(directory);

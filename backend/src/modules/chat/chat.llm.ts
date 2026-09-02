@@ -1,9 +1,7 @@
 import { GoogleGenAI } from "@google/genai";
 import { ApiError } from "../../utils/ApiError.js";
 
-const ai = new GoogleGenAI({
-  apiKey: process.env.GEMINI_API_KEY!,
-});
+const ai = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY! });
 
 const MAX_RETRIES = 3;
 
@@ -18,31 +16,37 @@ export const llmService = {
       .join("\n\n");
 
     const contextText = chunks
-      .map(
-        (chunk, index) => `
+      .map((chunk, index) => 
+`
 SOURCE ${index + 1}
 File: ${chunk.filePath}
 Lines: ${chunk.startLine}-${chunk.endLine}
 
 ${chunk.content}
-`
-      )
+`     )
       .join("\n");
-
-    const prompt = `
-You are RepoQA, an AI assistant that answers questions about a software repository.
-
-You have access to retrieved code from the repository.
+      
+const prompt = `
+You have access to retrieved code from a repository the user is asking about.
 
 RULES:
-1. Answer repository-related questions using the provided repository context.
-2. Never invent files, functions, classes, variables, or behavior.
-3. If the answer is present in the repository context, explain it clearly.
-4. When mentioning repository code, always provide the file path and line range.
-5. Use conversation history only to understand the user's follow-up questions.
-6. If the repository context does not contain enough information to answer the question, say:
+1. For specific factual questions about code (what a function does, where something is
+   implemented, how a feature works), answer using only the provided repository context.
+   Never invent files, functions, classes, or behavior that isn't shown.
+2. For analytical or subjective questions (e.g. how complex or difficult the project would
+   be to build, architectural assessments, code quality opinions, effort estimates), you may
+   reason using the repository context available (tech stack, file structure, code patterns
+   visible) combined with general software engineering judgment. Clearly frame these as an
+   assessment or estimate, not a fact pulled from a specific file.
+3. When referring to code, mention the relevant file name for context, but do not state
+   specific line numbers yourself — exact citations are shown separately in the interface.
+4. Use conversation history only to understand the user's follow-up questions.
+5. If a specific factual question cannot be answered from the repository context, say:
    "I could not find enough evidence in the repository to answer this question."
-7. Do not claim that repository context was not provided if SOURCE sections are present.
+   Do not apply this refusal to analytical/subjective questions — reason about those instead.
+6. Do not claim that repository context was not provided if SOURCE sections are present.
+7. If the question is unrelated to this repository, politely explain that you can only
+   answer questions about the connected codebase.
 
 CONVERSATION HISTORY:
 ${historyText || "No previous conversation."}

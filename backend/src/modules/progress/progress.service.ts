@@ -1,7 +1,4 @@
-import {
-    redisPublisher,
-    redisSubscriber,
-} from "../../queue/redisPubSub.js";
+import { redisPublisher, redisSubscriber } from "../../queue/redisPubSub.js";
 
 export interface ProgressEvent {
     id: number;
@@ -9,23 +6,15 @@ export interface ProgressEvent {
     message: string;
 }
 
-const getChannel = (repositoryId: string) =>
-    `repository-progress:${repositoryId}`;
+const getChannel = (repositoryId: string) => `repository-progress:${repositoryId}`;
 
-const getKey = (repositoryId: string) =>
-    `repository-progress:${repositoryId}:events`;
+const getKey = (repositoryId: string) => `repository-progress:${repositoryId}:events`;
 
-export const publishProgress = async (
-    repositoryId: string,
-    step: string,
-    message: string
-) => {
+export const publishProgress = async (repositoryId: string, step: string, message: string) => {
     const key = getKey(repositoryId);
 
     // Generate an ordered event id
-    const id = await redisPublisher.incr(
-        `${key}:sequence`
-    );
+    const id = await redisPublisher.incr(`${key}:sequence`);
 
     const event: ProgressEvent = {
         id,
@@ -40,10 +29,7 @@ export const publishProgress = async (
 
     // Keep progress only for 1 hour
     await redisPublisher.expire(key, 3600);
-    await redisPublisher.expire(
-        `${key}:sequence`,
-        3600
-    );
+    await redisPublisher.expire(`${key}:sequence`, 3600);
 
     // Publish event for currently connected SSE clients
     await redisPublisher.publish(
@@ -52,14 +38,8 @@ export const publishProgress = async (
     );
 };
 
-export const getProgressHistory = async (
-    repositoryId: string
-): Promise<ProgressEvent[]> => {
-    const events = await redisPublisher.lrange(
-        getKey(repositoryId),
-        0,
-        -1
-    );
+export const getProgressHistory = async (repositoryId: string): Promise<ProgressEvent[]> => {
+    const events = await redisPublisher.lrange(getKey(repositoryId), 0, -1);
 
     return events.map(
         (event) => JSON.parse(event) as ProgressEvent

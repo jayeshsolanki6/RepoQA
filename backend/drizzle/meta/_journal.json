@@ -57,6 +57,13 @@
       "when": 1788068002381,
       "tag": "0007_whole_satana",
       "breakpoints": true
+    },
+    {
+      "idx": 8,
+      "version": "7",
+      "when": 1788286303910,
+      "tag": "0008_cheerful_praxagora",
+      "breakpoints": true
     }
   ]
 }

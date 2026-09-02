@@ -25,7 +25,7 @@ export const retrievalService = {
         const chunks = await findSimilarChunks(
             repositoryId,
             queryEmbedding,
-            5
+            10
         );
 
         return chunks;

@@ -1,32 +1,15 @@
-import type {
-    NextFunction,
-    Request,
-    Response,
-} from "express";
+import type { NextFunction, Request, Response } from "express";
 
-import {
-    getProgressHistory,
-    subscribeToProgress,
-    ProgressEvent,
-} from "./progress.service.js";
-
+import { getProgressHistory, subscribeToProgress, ProgressEvent } from "./progress.service.js";
 import { getRepositoryById } from "../repository/repository.repository.js";
 
-export const streamProgress = async (
-    req: Request,
-    res: Response,
-    next: NextFunction
-) => {
+export const streamProgress = async (req: Request, res: Response, next: NextFunction) => {
     try {
         const repositoryId = req.params.repositoryId as string;
 
-        const repository =
-            await getRepositoryById(repositoryId);
+        const repository = await getRepositoryById(repositoryId);
 
-        if (
-            !repository ||
-            repository.userId !== req.user.userId
-        ) {
+        if (!repository || repository.userId !== req.user.userId) {
             res.status(404).end();
             return;
         }
@@ -48,16 +31,9 @@ export const streamProgress = async (
 
         res.flushHeaders();
 
-        const sendEvent = (
-            event: ProgressEvent
-        ) => {
-            res.write(
-                `event: ${event.step}\n`
-            );
-
-            res.write(
-                `data: ${JSON.stringify(event)}\n\n`
-            );
+        const sendEvent = (event: ProgressEvent) => {
+            res.write(`event: ${event.step}\n`);
+            res.write(`data: ${JSON.stringify(event)}\n\n`);
         };
 
         /*
@@ -70,32 +46,25 @@ export const streamProgress = async (
         let lastSentId = 0;
 
         const subscription =
-            await subscribeToProgress(
-                repositoryId,
-                (event) => {
-                    if (event.id <= lastSentId) {
-                        return;
-                    }
-
-                    lastSentId = event.id;
-
-                    sendEvent(event);
-
-                    if (
-                        event.step === "completed" ||
-                        event.step === "failed"
-                    ) {
-                        res.end();
-                    }
+            await subscribeToProgress(repositoryId,(event) => {
+                if (event.id <= lastSentId) {
+                    return;
                 }
-            );
+
+                lastSentId = event.id;
+
+                sendEvent(event);
+
+                if (event.step === "completed" || event.step === "failed") {
+                    res.end();
+                }
+            });
 
         /*
          * Now read all events that happened before
          * the SSE connection was established.
          */
-        const history =
-            await getProgressHistory(repositoryId);
+        const history = await getProgressHistory(repositoryId);
 
         for (const event of history) {
             if (event.id <= lastSentId) {
@@ -106,10 +75,7 @@ export const streamProgress = async (
 
             sendEvent(event);
 
-            if (
-                event.step === "completed" ||
-                event.step === "failed"
-            ) {
+            if (event.step === "completed" || event.step === "failed") {
                 await subscription.close();
                 res.end();
                 return;

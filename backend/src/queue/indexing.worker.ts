@@ -6,38 +6,24 @@ import { cloneService } from "../modules/clone/clone.service.js";
 import { indexingService } from "../modules/embed/indexing.service.js";
 import { deleteClonedRepository } from "../modules/clone/git.js";
 
-import {
-    publishProgress,
-} from "../modules/progress/progress.service.js";
+import { publishProgress } from "../modules/progress/progress.service.js";
 
 export const indexingWorker = new Worker(
     "repository-indexing",
 
     async (job) => {
-        const {
-            repositoryId,
-            githubUrl,
-        } = job.data;
+        const { repositoryId, githubUrl } = job.data;
 
-        console.log(
-            `Starting indexing: ${repositoryId}`
-        );
+        console.log(`Starting indexing: ${repositoryId}`);
 
         let repoPath: string | undefined;
 
         try {
-            await publishProgress(
-                repositoryId,
-                "cloning",
-                "Cloning repository..."
-            );
+            await publishProgress(repositoryId, "cloning", "Cloning repository...");
 
             console.log("Cloning repository...");
 
-            repoPath = await cloneService.clone(
-                repositoryId,
-                githubUrl
-            );
+            repoPath = await cloneService.clone(repositoryId, githubUrl);
 
             await indexingService.index(
                 repositoryId,
@@ -56,9 +42,7 @@ export const indexingWorker = new Worker(
                 "Repository indexed successfully"
             );
 
-            console.log(
-                `Indexing completed: ${repositoryId}`
-            );
+            console.log(`Indexing completed: ${repositoryId}`);
 
             return {
                 success: true,
@@ -71,10 +55,37 @@ export const indexingWorker = new Worker(
                 "Repository indexing failed"
             );
 
-            console.error(
-                `Indexing failed: ${repositoryId}`,
-                error
-            );
+            /* Drizzle wraps the real Postgres error in error.cause, while the
+               top-level error.message is a multi-megabyte INSERT + params dump.
+               Skip the giant top level when a cause exists and walk that
+               chain; otherwise the message is already compact (e.g. ApiError
+               thrown by saveChunks or the embedding service). */
+            const hasCause = (error as { cause?: unknown })?.cause !== undefined;
+
+            if (hasCause) {
+                let depth = 0;
+                let err: unknown = (error as { cause?: unknown })?.cause;
+                while (err && depth < 4) {
+                    const c = err as {
+                        message?: string;
+                        code?: string;
+                        detail?: string;
+                        cause?: unknown;
+                    };
+                    console.error(`Indexing failed: ${repositoryId} [cause ${depth}]`, c.message ?? err);
+                    if (c.code) console.error("  code:", c.code);
+                    if (c.detail) {
+                        console.error("  detail:", String(c.detail).slice(0, 400));
+                    }
+                    err = c.cause;
+                    depth++;
+                }
+            } else {
+                console.error(
+                    `Indexing failed: ${repositoryId}`,
+                    error instanceof Error ? error.message : error
+                );
+            }
 
             throw error;
 
@@ -85,20 +96,13 @@ export const indexingWorker = new Worker(
         }
     },
 
-    {
-        connection: redisConnection,
-    }
+    { connection: redisConnection }
 );
 
 indexingWorker.on("completed", (job) => {
-    console.log(
-        `Job ${job.id} completed successfully`
-    );
+    console.log(`Job ${job.id} completed successfully`);
 });
 
 indexingWorker.on("failed", (job, error) => {
-    console.error(
-        `Job ${job?.id} failed:`,
-        error.message
-    );
+    console.error(`Job ${job?.id} failed:`, error.message);
 });
