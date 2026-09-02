@@ -1,9 +1,10 @@
 import { Navigate, Outlet, useLocation } from 'react-router-dom';
 import { FullPageLoader } from '@/components/FullPageLoader';
-import { useAuth } from '@/hooks/useAuth';
+import { useAuthStore } from '@/features/auth/authStore';
 
 export function ProtectedRoute() {
-  const { isLoading, isAuthenticated } = useAuth();
+  const isLoading = useAuthStore((state) => state.isLoading);
+  const isAuthenticated = Boolean(useAuthStore((state) => state.user));
   const location = useLocation();
 
   if (isLoading) return <FullPageLoader />;

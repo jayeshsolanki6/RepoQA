@@ -3,7 +3,7 @@ import { ArrowRight, Check, Github, Search, Sparkles } from 'lucide-react';
 import { Link, useNavigate } from 'react-router-dom';
 import { toast } from 'sonner';
 import { repositoryApi } from '@/features/repository/repository.api';
-import { useAuth } from '@/hooks/useAuth';
+import { useAuthStore } from '@/features/auth/authStore';
 import { getApiError } from '@/lib/axios';
 import { Input } from '@/components/ui/Input';
 import { Button } from '@/components/ui/Button';
@@ -18,12 +18,8 @@ const EXAMPLE_REPOS = ['expressjs/express', 'drizzle-team/drizzle-orm', 'faceboo
 
 export function LandingPage() {
   const navigate = useNavigate();
-  /**
-   * `isLoading` is true until the session restore settles. Branching on `user`
-   * alone made the page flash the logged-out CTA ("Get started", the sign-in
-   * note) for a second before switching to the logged-in one.
-   */
-  const { user, isLoading: isRestoring } = useAuth();
+  const user = useAuthStore((state) => state.user);
+  const isRestoring = useAuthStore((state) => state.isLoading);
   const [githubUrl, setGithubUrl] = useState('');
   const [loading, setLoading] = useState(false);
 

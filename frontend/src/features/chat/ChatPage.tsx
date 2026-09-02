@@ -15,17 +15,6 @@ import type { Conversation, Repository } from '@/types/api';
 
 const MAX_COMPOSER_HEIGHT = 160;
 
-/*
- * Deliberately repository-agnostic. Earlier prompts named auth and refresh
- * tokens, which only made sense for this project's own backend and read as
- * broken suggestions on any other repository.
- */
-const SUGGESTIONS = [
-  'What does this repository do?',
-  'Walk me through the project structure',
-  'Where does execution start?',
-];
-
 export function ChatPage() {
   const { repositoryId } = useParams<{ repositoryId: string }>();
   const navigate = useNavigate();
@@ -389,25 +378,6 @@ export function ChatPage() {
                   <h2 className="mt-4 text-xl font-semibold tracking-tight text-white sm:text-2xl">
                     Ask the codebase anything.
                   </h2>
-                  <p className="mx-auto mt-2 max-w-lg text-sm leading-6 text-slate-500">
-                    Architecture, authentication, data flow, functions, modules, or implementation
-                    details.
-                  </p>
-                  <div className="mx-auto mt-5 flex max-w-2xl flex-wrap justify-center gap-2">
-                    {SUGGESTIONS.map((prompt) => (
-                      <button
-                        type="button"
-                        key={prompt}
-                        onClick={() => {
-                          setQuestion(prompt);
-                          textareaRef.current?.focus();
-                        }}
-                        className="rounded-xl border border-line bg-white/[0.025] px-3 py-2 text-xs text-slate-500 transition hover:border-lime-300/25 hover:text-white"
-                      >
-                        {prompt}
-                      </button>
-                    ))}
-                  </div>
                 </div>
               </div>
             ) : (
