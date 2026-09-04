@@ -28,6 +28,12 @@ export interface Message {
   createdAt: string;
 }
 
+export interface Source {
+  filePath: string;
+  startLine: number;
+  endLine: number;
+}
+
 export interface ChatResult {
   answer: string;
 }

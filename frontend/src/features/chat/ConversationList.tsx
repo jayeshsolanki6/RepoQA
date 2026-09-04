@@ -8,6 +8,7 @@ interface Props {
   onSelect: (conversation: Conversation) => void;
   onNew: () => void;
   onDelete: (conversation: Conversation) => void;
+  creating?: boolean;
   deletingId?: string | null;
   disabled?: boolean;
 }
@@ -44,6 +45,7 @@ export function ConversationList({
   onSelect,
   onNew,
   onDelete,
+  creating = false,
   deletingId = null,
   disabled = false,
 }: Props) {
@@ -61,12 +63,12 @@ export function ConversationList({
         <button
           type="button"
           onClick={onNew}
-          disabled={disabled}
+          disabled={disabled || creating}
           className="grid h-8 w-8 shrink-0 place-items-center rounded-lg border border-line bg-surface/50 text-slate-400 transition hover:border-lime-300/30 hover:bg-lime-300/[0.08] hover:text-lime-300 disabled:cursor-not-allowed disabled:opacity-40"
           aria-label="New conversation"
           title="New conversation"
         >
-          <Plus size={15} />
+          {creating ? <Spinner size="sm" /> : <Plus size={15} />}
         </button>
       </div>
 
@@ -74,7 +76,7 @@ export function ConversationList({
         <button
           type="button"
           onClick={onNew}
-          disabled={disabled}
+          disabled={disabled || creating}
           className={`group flex min-w-[140px] items-center gap-2 rounded-lg border px-2.5 py-1.5 text-left transition-all duration-150 disabled:cursor-not-allowed disabled:opacity-40 md:min-w-0 ${
             activeId === null
               ? 'border-lime-300/25 bg-lime-300/[0.07] text-white shadow-[0_0_15px_rgba(190,242,100,0.05)]'

@@ -7,13 +7,11 @@ import { ProgressView } from './ProgressView';
 import { streamProgress } from './progress.api';
 import { repositoryApi } from './repository.api';
 import { getApiError } from '@/lib/axios';
-import { useActiveRepoStore } from './activeRepoStore';
 import type { ProgressEvent, Repository } from '@/types/api';
 
 export function IndexingPage() {
   const { repositoryId } = useParams<{ repositoryId: string }>();
   const navigate = useNavigate();
-  const setActiveRepo = useActiveRepoStore((state) => state.setActiveRepo);
   const [repository, setRepository] = useState<Repository | null>(null);
   const [events, setEvents] = useState<ProgressEvent[]>([]);
   const [pageError, setPageError] = useState('');
@@ -27,7 +25,6 @@ export function IndexingPage() {
       try {
         const repo = await repositoryApi.getOne(repositoryId);
         setRepository(repo);
-        setActiveRepo(repo);
         await streamProgress(
           repositoryId,
           {
@@ -54,11 +51,8 @@ export function IndexingPage() {
     };
 
     void load();
-    return () => {
-      controller.abort();
-      setActiveRepo(null);
-    };
-  }, [repositoryId, setActiveRepo]);
+    return () => controller.abort();
+  }, [repositoryId]);
 
   // Terminal state is a property of the whole stream, not of the last event.
   const { completed, failed } = useMemo(
@@ -87,7 +81,7 @@ export function IndexingPage() {
   }
 
   return (
-    <main className="mx-auto flex min-h-[calc(100dvh-3.5rem)] w-full max-w-xl flex-col justify-center px-4 py-4 sm:px-6">
+    <main className="mx-auto flex min-h-[calc(100dvh-4rem)] w-full max-w-xl flex-col justify-center px-4 py-4 sm:px-6">
       <div className="mb-3 flex items-center justify-between">
         <button
           type="button"

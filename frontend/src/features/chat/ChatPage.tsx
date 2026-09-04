@@ -1,7 +1,9 @@
 import { useCallback, useEffect, useRef, useState, type FormEvent } from 'react';
-import { FileCode2, Send } from 'lucide-react';
-import { useParams } from 'react-router-dom';
+import { ExternalLink, FileCode2, LayoutDashboard, LogOut, Send, UserRound } from 'lucide-react';
+import { useNavigate, useParams } from 'react-router-dom';
 import { toast } from 'sonner';
+import { Logo } from '@/components/Logo';
+import { useAuthStore } from '@/features/auth/authStore';
 import { Textarea } from '@/components/ui/Textarea';
 import { Spinner } from '@/components/Spinner';
 import { ErrorState } from '@/components/ErrorState';
@@ -11,14 +13,15 @@ import { ConversationList } from './ConversationList';
 import { MessageBubble, type ChatMessage } from './MessageBubble';
 import { getApiError } from '@/lib/axios';
 import { DeleteModal } from '@/components/DeleteModal';
-import { useActiveRepoStore } from '@/features/repository/activeRepoStore';
 import type { Conversation, Repository } from '@/types/api';
 
 const MAX_COMPOSER_HEIGHT = 160;
 
 export function ChatPage() {
   const { repositoryId } = useParams<{ repositoryId: string }>();
-  const setActiveRepo = useActiveRepoStore((state) => state.setActiveRepo);
+  const navigate = useNavigate();
+  const user = useAuthStore((state) => state.user);
+  const logout = useAuthStore((state) => state.logout);
   const bottomRef = useRef<HTMLDivElement | null>(null);
   const textareaRef = useRef<HTMLTextAreaElement | null>(null);
 
@@ -122,7 +125,6 @@ export function ChatPage() {
         if (cancelled) return;
 
         setRepository(repo);
-        setActiveRepo(repo);
         setConversations(chats);
 
         // Always default to a fresh new chat when opening the repository
@@ -138,9 +140,8 @@ export function ChatPage() {
     void load();
     return () => {
       cancelled = true;
-      setActiveRepo(null);
     };
-  }, [repositoryId, setActive, setActiveRepo]);
+  }, [repositoryId, setActive]);
 
   useEffect(() => {
     bottomRef.current?.scrollIntoView({ behavior: 'smooth', block: 'end' });
@@ -256,6 +257,11 @@ export function ChatPage() {
     }
   };
 
+  const handleLogout = async () => {
+    await logout();
+    navigate('/login', { replace: true });
+  };
+
   if (!repositoryId) {
     return (
       <main className="mx-auto max-w-2xl px-5 py-10">
@@ -266,7 +272,7 @@ export function ChatPage() {
 
   if (loading) {
     return (
-      <div className="grid h-[calc(100dvh-3.5rem)] place-items-center bg-ink">
+      <div className="grid h-dvh place-items-center bg-ink">
         <Spinner size="lg" />
       </div>
     );
@@ -274,7 +280,7 @@ export function ChatPage() {
 
   if (error || !repository) {
     return (
-      <div className="flex h-[calc(100dvh-3.5rem)] flex-col items-center justify-center bg-ink px-5">
+      <div className="flex h-dvh flex-col items-center justify-center bg-ink px-5">
         <ErrorState
           message={error || 'Repository not found'}
           onRetry={() => window.location.reload()}
@@ -284,7 +290,57 @@ export function ChatPage() {
   }
 
   return (
-    <div className="flex h-[calc(100dvh-3.5rem)] w-full overflow-hidden bg-ink text-[#eaf0ee]">
+    <div className="flex h-dvh w-full flex-col overflow-hidden bg-ink text-[#eaf0ee]">
+      {/* Single Unified Header */}
+      <header className="sticky top-0 z-30 flex h-14 shrink-0 items-center justify-between border-b border-white/[0.07] bg-ink/95 px-4 backdrop-blur-md sm:px-6">
+        <div className="flex min-w-0 items-center gap-3">
+          <Logo />
+          <span className="text-slate-700">/</span>
+          <div className="flex min-w-0 items-center gap-2">
+            <span className="truncate text-xs font-semibold text-white">
+              {repository.owner}/{repository.name}
+            </span>
+            <a
+              href={repository.githubUrl}
+              target="_blank"
+              rel="noreferrer"
+              className="grid h-6 w-6 shrink-0 place-items-center rounded-md text-slate-500 transition hover:bg-white/[0.06] hover:text-lime-300"
+              title="Open in GitHub"
+            >
+              <ExternalLink size={13} />
+            </a>
+          </div>
+        </div>
+
+        <div className="flex shrink-0 items-center gap-2">
+          <button
+            type="button"
+            onClick={() => navigate('/dashboard')}
+            className="flex items-center gap-1.5 rounded-lg px-2.5 py-1.5 text-xs text-slate-400 transition hover:bg-white/[0.04] hover:text-white"
+            title="Go to Dashboard"
+          >
+            <LayoutDashboard size={14} />
+            <span className="hidden md:inline">Dashboard</span>
+          </button>
+
+          {user && (
+            <div className="hidden items-center gap-2 rounded-lg border border-white/[0.08] bg-white/[0.025] px-2.5 py-1.5 text-xs text-slate-400 sm:flex">
+              <UserRound size={13} />
+              <span className="max-w-[120px] truncate">{user.name}</span>
+            </div>
+          )}
+
+          <button
+            type="button"
+            onClick={() => void handleLogout()}
+            className="grid h-8 w-8 place-items-center rounded-lg text-slate-500 transition hover:bg-white/[0.05] hover:text-white"
+            title="Log out"
+            aria-label="Log out"
+          >
+            <LogOut size={15} />
+          </button>
+        </div>
+      </header>
 
       {/* Delete conversation confirmation modal */}
       {confirmDeleteConversation && (
