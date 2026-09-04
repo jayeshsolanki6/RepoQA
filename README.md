@@ -1,47 +1,71 @@
 # RepoQA
 
-Chat with any GitHub repository. RepoQA clones a repo, chunks and embeds its code with Google Gemini, stores the vectors in PostgreSQL + pgvector, and answers your questions grounded in the actual source code — with file citations and live indexing progress.
+Chat with any public GitHub repository. RepoQA clones a repo, breaks its source files into chunks, embeds those chunks into a vector database, and lets you ask natural-language questions about the codebase — answered by an LLM grounded strictly in the retrieved code, with file and line-number citations.
+
+Built as a Retrieval-Augmented Generation (RAG) pipeline purpose-built for source code.
+
+---
 
 ## Features
 
-- **Repository indexing** — submit a GitHub URL and the backend clones it, reads the files, chunks them with a sliding window, embeds each chunk, and stores everything in a pgvector-enabled database.
-- **Live progress streaming** — indexing runs as a BullMQ background job, with step-by-step progress (clone → load → chunk → embed → done) streamed to the UI over Server-Sent Events.
-- **Grounded Q&A (RAG)** — questions are embedded and matched against code chunks via vector similarity; Gemini answers strictly from the retrieved context and refuses to invent files or functions.
-- **Conversations** — multi-turn chat per repository with conversation history, deletion, and markdown-rendered answers with exact file/line citations.
-- **Authentication** — email/password auth with short-lived JWT access tokens and rotating refresh tokens in httpOnly cookies.
+- **Index any public GitHub repo** — paste a URL, RepoQA clones it and processes it in the background.
+- **Live indexing progress** — real-time status (cloning → chunking → embedding → saving) streamed to the UI via Server-Sent Events.
+- **Chat with the codebase** — ask questions in plain English and get answers grounded in the actual retrieved code, with source citations.
+- **Multiple conversations per repo** — start fresh threads and revisit chat history.
+- **Auth** — email/password signup and login with JWT access + refresh tokens.
 
-## Tech Stack
+## How it works
+
+```
+User submits repo URL
+        │
+        ▼
+Repo verified (git ls-remote) → saved → indexing job queued (BullMQ / Redis)
+        │
+        ▼
+Worker: clone repo (shallow) → load supported source files
+        │
+        ▼
+Chunk files (sliding window, ~3000 chars, 15-line overlap)
+        │
+        ▼
+Embed each chunk (Gemini gemini-embedding-001, 3072-dim) → store in Postgres (pgvector)
+        │
+        ▼
+Progress published over Redis Pub/Sub → streamed to client via SSE
+        │
+        ▼
+User asks a question
+        │
+        ▼
+Question embedded → top-10 similar chunks retrieved (cosine distance)
+        │
+        ▼
+Chunks + conversation history → prompt → Gemini gemini-flash-lite-latest
+        │
+        ▼
+Grounded answer returned, with file/line citations shown in the UI
+```
+
+## Tech stack
 
 **Backend**
-
-- Node.js + Express 5 + TypeScript
-- PostgreSQL with [pgvector](https://github.com/pgvector/pgvector) (Drizzle ORM)
-- Redis + BullMQ (indexing queue & workers)
-- Google Gemini (`@google/genai`) for embeddings (`gemini-embedding-001`) and chat
-- JWT auth, Zod validation, SSE progress streaming
+- Node.js, Express 5, TypeScript
+- PostgreSQL with the [pgvector](https://github.com/pgvector/pgvector) extension for vector storage/search
+- Drizzle ORM + drizzle-kit for schema and migrations
+- BullMQ (Redis-backed) for background indexing jobs
+- Redis Pub/Sub + Server-Sent Events for real-time indexing progress
+- Google Gemini API (`@google/genai`) for embeddings and chat generation
+- `simple-git` for shallow repo cloning
+- JWT (access + refresh tokens) with bcrypt password hashing
 
 **Frontend**
-
-- React 19 + Vite + TypeScript
+- React 19, TypeScript, Vite
 - Tailwind CSS 4
-- Zustand (auth/session state)
-- React Router 7, axios (with automatic token-refresh interceptor)
-- react-markdown, sonner, lucide-react
+- Zustand for state management
+- React Router 7
+- Axios, react-markdown
 
-## How It Works
-
-```
-                 ┌─────────────────────── Indexing (background job) ───────────────────────┐
- GitHub URL ───► │ clone (simple-git) → read files → chunk (sliding window)                │
-                 │ → embed (Gemini) → store chunks + vectors in PostgreSQL/pgvector        │
-                 └───────────────────────────────┬─────────────────────────────────────────┘
-                                                 │ progress events via Redis pub/sub
-                                                 ▼
-                                             SSE stream ───► UI progress view
-
- Question ───► embed question (Gemini) ───► nearest-neighbor search (pgvector)
-          ───► retrieved chunks + chat history ───► Gemini ───► grounded answer + citations
-```
 
 ## Project Structure
 
