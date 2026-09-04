@@ -78,6 +78,7 @@ export const getAllMessages = async (conversationId: string) => {
     return await db
         .select({
             id: messages.id,
+            conversationId: messages.conversationId,
             role: messages.role,
             content: messages.content,
             createdAt: messages.createdAt,

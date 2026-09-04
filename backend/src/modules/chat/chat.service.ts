@@ -27,11 +27,6 @@ export const chatService = {
 
         return {
             answer,
-            // sources: chunks.map((chunk) => ({
-            //     filePath: chunk.filePath,
-            //     startLine: chunk.startLine,
-            //     endLine: chunk.endLine,
-            // })),
         };
     },
 

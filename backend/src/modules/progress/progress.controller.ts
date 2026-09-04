@@ -44,9 +44,21 @@ export const streamProgress = async (req: Request, res: Response, next: NextFunc
          * reading the previously stored events.
          */
         let lastSentId = 0;
+        let isCleanedUp = false;
+
+        const keepAliveTimer = setInterval(() => {
+            res.write(": keepalive\n\n");
+        }, 15_000);
+
+        const cleanup = async () => {
+            if (isCleanedUp) return;
+            isCleanedUp = true;
+            clearInterval(keepAliveTimer);
+            await subscription.close();
+        };
 
         const subscription =
-            await subscribeToProgress(repositoryId,(event) => {
+            await subscribeToProgress(repositoryId, async (event) => {
                 if (event.id <= lastSentId) {
                     return;
                 }
@@ -56,6 +68,7 @@ export const streamProgress = async (req: Request, res: Response, next: NextFunc
                 sendEvent(event);
 
                 if (event.step === "completed" || event.step === "failed") {
+                    await cleanup();
                     res.end();
                 }
             });
@@ -76,14 +89,14 @@ export const streamProgress = async (req: Request, res: Response, next: NextFunc
             sendEvent(event);
 
             if (event.step === "completed" || event.step === "failed") {
-                await subscription.close();
+                await cleanup();
                 res.end();
                 return;
             }
         }
 
         req.on("close", async () => {
-            await subscription.close();
+            await cleanup();
         });
 
     } catch (error) {
