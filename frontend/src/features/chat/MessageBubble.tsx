@@ -1,11 +1,8 @@
 import { Bot } from 'lucide-react';
-import type { Message, Source } from '@/types/api';
+import type { Message } from '@/types/api';
 import { MarkdownText } from '@/components/MarkdownText';
-import { SourcePill } from '@/components/SourcePill';
 
-export interface ChatMessage extends Message {
-  sources?: Source[];
-}
+export type ChatMessage = Message;
 
 export function MessageBubble({ message }: { message: ChatMessage }) {
   if (message.role === 'user') {
@@ -27,17 +24,6 @@ export function MessageBubble({ message }: { message: ChatMessage }) {
         </div>
 
         <MarkdownText content={message.content} />
-
-        {message.sources?.length ? (
-          <div className="mt-4 flex flex-wrap gap-2 border-t border-white/[0.07] pt-3">
-            {message.sources.map((source, index) => (
-              <SourcePill
-                key={`${source.filePath}-${source.startLine}-${source.endLine}-${index}`}
-                source={source}
-              />
-            ))}
-          </div>
-        ) : null}
       </div>
     </div>
   );

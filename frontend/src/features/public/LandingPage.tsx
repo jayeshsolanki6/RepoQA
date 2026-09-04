@@ -11,7 +11,7 @@ import { Button } from '@/components/ui/Button';
 const STEPS = [
   ['01', 'Paste a link', 'Connect a public GitHub repository in one step.'],
   ['02', 'RepoQA indexes it', 'Clone, load, chunk, embed and store code for semantic retrieval.'],
-  ['03', 'Ask anything', 'Get grounded answers with exact source file and line ranges.'],
+  ['03', 'Ask anything', 'Get grounded, contextual answers across your entire codebase.'],
 ] as const;
 
 const EXAMPLE_REPOS = ['expressjs/express', 'drizzle-team/drizzle-orm', 'facebook/react'];
@@ -62,7 +62,7 @@ export function LandingPage() {
           </h1>
           <p className="mt-4 max-w-2xl text-base leading-7 text-slate-500">
             RepoQA indexes your codebase, retrieves relevant code for each question, and answers
-            with file and line citations.
+            with deep contextual accuracy.
           </p>
 
           <div className="mt-6 max-w-5xl rounded-2xl border border-line bg-surface/95 p-2 shadow-[0_20px_80px_rgba(0,0,0,0.25)]">
@@ -165,11 +165,11 @@ export function LandingPage() {
               </p>
             </div>
             <p className="mt-3.5 text-lg font-semibold text-white">
-              Every answer points back to the repository.
+              Every answer is grounded in your codebase.
             </p>
             <p className="mt-2 text-sm leading-6 text-slate-500">
-              Relevant file paths and line ranges are returned with every answer so you can verify
-              it.
+              Semantic retrieval finds the most relevant files and context so answers accurately
+              reflect your repository.
             </p>
           </div>
         </div>

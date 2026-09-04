@@ -2,17 +2,18 @@ import { useEffect, useMemo, useState } from 'react';
 import { ArrowLeft, CheckCircle2, ExternalLink } from 'lucide-react';
 import { Link, useNavigate, useParams } from 'react-router-dom';
 import { Button } from '@/components/ui/Button';
-import { Spinner } from '@/components/Spinner';
 import { ErrorState } from '@/components/ErrorState';
 import { ProgressView } from './ProgressView';
 import { streamProgress } from './progress.api';
 import { repositoryApi } from './repository.api';
 import { getApiError } from '@/lib/axios';
+import { useActiveRepoStore } from './activeRepoStore';
 import type { ProgressEvent, Repository } from '@/types/api';
 
 export function IndexingPage() {
   const { repositoryId } = useParams<{ repositoryId: string }>();
   const navigate = useNavigate();
+  const setActiveRepo = useActiveRepoStore((state) => state.setActiveRepo);
   const [repository, setRepository] = useState<Repository | null>(null);
   const [events, setEvents] = useState<ProgressEvent[]>([]);
   const [pageError, setPageError] = useState('');
@@ -26,6 +27,7 @@ export function IndexingPage() {
       try {
         const repo = await repositoryApi.getOne(repositoryId);
         setRepository(repo);
+        setActiveRepo(repo);
         await streamProgress(
           repositoryId,
           {
@@ -52,8 +54,11 @@ export function IndexingPage() {
     };
 
     void load();
-    return () => controller.abort();
-  }, [repositoryId]);
+    return () => {
+      controller.abort();
+      setActiveRepo(null);
+    };
+  }, [repositoryId, setActiveRepo]);
 
   // Terminal state is a property of the whole stream, not of the last event.
   const { completed, failed } = useMemo(
@@ -82,35 +87,25 @@ export function IndexingPage() {
   }
 
   return (
-    <main className="mx-auto w-full max-w-[1100px] px-5 py-6 sm:px-8">
-      <button
-        type="button"
-        onClick={() => navigate('/dashboard')}
-        className="inline-flex w-fit items-center gap-2 text-sm text-slate-500 transition hover:text-white"
-      >
-        <ArrowLeft size={15} /> Back to repositories
-      </button>
-
-      <div className="mb-5 mt-4 flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
-        <div>
-          <p className="code-font text-[10px] uppercase tracking-[0.18em] text-lime-300">
-            repository / indexing
-          </p>
-          <h1 className="mt-2 text-2xl font-semibold tracking-tight text-white sm:text-3xl">
-            {repository ? `${repository.owner}/${repository.name}` : 'Repository'}
-          </h1>
-          {repository && (
-            <a
-              href={repository.githubUrl}
-              target="_blank"
-              rel="noreferrer"
-              className="mt-1.5 inline-flex items-center gap-1.5 text-xs text-slate-600 hover:text-lime-300"
-            >
-              Open on GitHub <ExternalLink size={12} />
-            </a>
-          )}
-        </div>
-        {events.length === 0 && !pageError && <Spinner />}
+    <main className="mx-auto flex min-h-[calc(100dvh-3.5rem)] w-full max-w-xl flex-col justify-center px-4 py-4 sm:px-6">
+      <div className="mb-3 flex items-center justify-between">
+        <button
+          type="button"
+          onClick={() => navigate('/dashboard')}
+          className="inline-flex items-center gap-1.5 text-xs text-slate-500 transition hover:text-white"
+        >
+          <ArrowLeft size={14} /> Repositories
+        </button>
+        {repository && (
+          <a
+            href={repository.githubUrl}
+            target="_blank"
+            rel="noreferrer"
+            className="inline-flex items-center gap-1 text-xs text-slate-500 transition hover:text-lime-300"
+          >
+            {repository.owner}/{repository.name} <ExternalLink size={11} />
+          </a>
+        )}
       </div>
 
       {pageError ? (
@@ -120,17 +115,17 @@ export function IndexingPage() {
       )}
 
       {streamError && !completed && !failed && (
-        <p className="mx-auto mt-3 max-w-xl text-center text-xs text-amber-300">{streamError}</p>
+        <p className="mt-2.5 text-center text-xs text-amber-300">{streamError}</p>
       )}
 
       {completed && (
-        <div className="mx-auto mt-3 flex max-w-xl flex-col gap-3 rounded-xl border border-lime-300/10 bg-lime-300/[0.035] px-4 py-3 sm:flex-row sm:items-center sm:justify-between">
-          <span className="inline-flex items-center gap-2 text-sm text-lime-200">
-            <CheckCircle2 size={16} /> Repository ready.
+        <div className="mt-3 flex items-center justify-between gap-3 rounded-xl border border-lime-300/15 bg-lime-300/[0.04] px-4 py-2.5 shadow-[0_10px_30px_rgba(0,0,0,0.2)]">
+          <span className="inline-flex items-center gap-2 text-xs font-medium text-lime-200">
+            <CheckCircle2 size={15} /> Repository ready.
           </span>
           <Button
             type="button"
-            className="px-3 py-2 text-xs"
+            className="h-8 px-3.5 text-xs"
             onClick={() => navigate(`/repositories/${repositoryId}`)}
           >
             Open chat
@@ -139,9 +134,9 @@ export function IndexingPage() {
       )}
 
       {failed && (
-        <div className="mx-auto mt-3 flex max-w-xl flex-wrap items-center justify-between gap-2 rounded-xl border border-red-400/10 bg-red-400/[0.03] px-4 py-3 text-xs text-slate-500">
-          <span>Delete this repository from the dashboard and add it again to retry.</span>
-          <Link to="/dashboard" className="text-lime-300 hover:text-lime-200">
+        <div className="mt-3 flex items-center justify-between gap-2 rounded-xl border border-red-400/15 bg-red-400/[0.04] px-4 py-2.5 text-xs text-slate-400">
+          <span>Indexing failed. Remove and retry.</span>
+          <Link to="/dashboard" className="font-medium text-lime-300 hover:text-lime-200">
             Dashboard
           </Link>
         </div>

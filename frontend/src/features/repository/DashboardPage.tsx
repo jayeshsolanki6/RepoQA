@@ -42,11 +42,21 @@ export function DashboardPage() {
 
   const addRepository = async (event: FormEvent) => {
     event.preventDefault();
-    const url = githubUrl.trim();
+    let url = githubUrl.trim();
     if (!url) {
-      toast.error('Enter a GitHub repository URL');
+      toast.error('Enter a GitHub repository URL or owner/repo');
       return;
     }
+
+    // Smart URL normalization: support "owner/repo" or "github.com/owner/repo"
+    if (!/^https?:\/\//i.test(url)) {
+      if (url.startsWith('github.com/')) {
+        url = `https://${url}`;
+      } else if (/^[\w.-]+\/[\w.-]+$/.test(url)) {
+        url = `https://github.com/${url}`;
+      }
+    }
+
     try {
       setAdding(true);
       const repository = await repositoryApi.create(url);
@@ -139,7 +149,7 @@ export function DashboardPage() {
               <Input
                 value={githubUrl}
                 onChange={(e) => setGithubUrl(e.target.value)}
-                placeholder="https://github.com/owner/repository"
+                placeholder="https://github.com/owner/repository or owner/repo"
                 className="h-12 border-0 bg-transparent pl-11 focus:ring-0"
                 disabled={adding}
               />

@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useRef, useState, type FormEvent } from 'react';
-import { ArrowLeft, ExternalLink, FileCode2, Send } from 'lucide-react';
-import { useNavigate, useParams } from 'react-router-dom';
+import { FileCode2, Send } from 'lucide-react';
+import { useParams } from 'react-router-dom';
 import { toast } from 'sonner';
 import { Textarea } from '@/components/ui/Textarea';
 import { Spinner } from '@/components/Spinner';
@@ -11,13 +11,14 @@ import { ConversationList } from './ConversationList';
 import { MessageBubble, type ChatMessage } from './MessageBubble';
 import { getApiError } from '@/lib/axios';
 import { DeleteModal } from '@/components/DeleteModal';
+import { useActiveRepoStore } from '@/features/repository/activeRepoStore';
 import type { Conversation, Repository } from '@/types/api';
 
 const MAX_COMPOSER_HEIGHT = 160;
 
 export function ChatPage() {
   const { repositoryId } = useParams<{ repositoryId: string }>();
-  const navigate = useNavigate();
+  const setActiveRepo = useActiveRepoStore((state) => state.setActiveRepo);
   const bottomRef = useRef<HTMLDivElement | null>(null);
   const textareaRef = useRef<HTMLTextAreaElement | null>(null);
 
@@ -28,7 +29,6 @@ export function ChatPage() {
   const [question, setQuestion] = useState('');
   const [loading, setLoading] = useState(true);
   const [messagesLoading, setMessagesLoading] = useState(false);
-  const [creating, setCreating] = useState(false);
   const [sending, setSending] = useState(false);
   const [deletingId, setDeletingId] = useState<string | null>(null);
   const [confirmDeleteConversation, setConfirmDeleteConversation] = useState<Conversation | null>(null);
@@ -74,20 +74,11 @@ export function ChatPage() {
     }
   };
 
-  const startNewConversation = async () => {
-    if (!repositoryId || creating || sending) return;
-    try {
-      setCreating(true);
-      const conversation = await chatApi.createConversation(repositoryId);
-      setConversations((previous) => [conversation, ...previous]);
-      setActive(conversation);
-      setMessages([]);
-      textareaRef.current?.focus();
-    } catch (err) {
-      toast.error(getApiError(err, 'Could not create conversation'));
-    } finally {
-      setCreating(false);
-    }
+  const startNewConversation = () => {
+    if (sending) return;
+    setActive(null);
+    setMessages([]);
+    textareaRef.current?.focus();
   };
 
   /**
@@ -131,22 +122,12 @@ export function ChatPage() {
         if (cancelled) return;
 
         setRepository(repo);
+        setActiveRepo(repo);
         setConversations(chats);
 
-        const first = chats[0];
-        if (!first) return;
-
-        setActive(first);
-        setMessagesLoading(true);
-        try {
-          const data = await chatApi.getMessages(first.id);
-          if (cancelled) return;
-          setMessages(data);
-        } catch (err) {
-          if (!cancelled) toast.error(getApiError(err, 'Could not load conversation'));
-        } finally {
-          if (!cancelled) setMessagesLoading(false);
-        }
+        // Always default to a fresh new chat when opening the repository
+        setActive(null);
+        setMessages([]);
       } catch (err) {
         if (!cancelled) setError(getApiError(err, 'Could not load this repository.'));
       } finally {
@@ -157,8 +138,9 @@ export function ChatPage() {
     void load();
     return () => {
       cancelled = true;
+      setActiveRepo(null);
     };
-  }, [repositoryId, setActive]);
+  }, [repositoryId, setActive, setActiveRepo]);
 
   useEffect(() => {
     bottomRef.current?.scrollIntoView({ behavior: 'smooth', block: 'end' });
@@ -214,7 +196,6 @@ export function ChatPage() {
         conversationId,
         role: 'assistant',
         content: result.answer,
-        sources: result.sources,
         createdAt: new Date().toISOString(),
       });
     } catch (err) {
@@ -285,7 +266,7 @@ export function ChatPage() {
 
   if (loading) {
     return (
-      <div className="grid h-[calc(100dvh-4rem)] place-items-center">
+      <div className="grid h-[calc(100dvh-3.5rem)] place-items-center bg-ink">
         <Spinner size="lg" />
       </div>
     );
@@ -293,17 +274,18 @@ export function ChatPage() {
 
   if (error || !repository) {
     return (
-      <main className="mx-auto max-w-2xl px-5 py-10">
+      <div className="flex h-[calc(100dvh-3.5rem)] flex-col items-center justify-center bg-ink px-5">
         <ErrorState
           message={error || 'Repository not found'}
           onRetry={() => window.location.reload()}
         />
-      </main>
+      </div>
     );
   }
 
   return (
-    <main className="mx-auto flex h-[calc(100dvh-4rem)] w-full max-w-[1400px] flex-col overflow-hidden px-3 pb-3 sm:px-5">
+    <div className="flex h-[calc(100dvh-3.5rem)] w-full overflow-hidden bg-ink text-[#eaf0ee]">
+
       {/* Delete conversation confirmation modal */}
       {confirmDeleteConversation && (
         <DeleteModal
@@ -321,64 +303,35 @@ export function ChatPage() {
         />
       )}
 
-      <div className="flex min-h-0 flex-1 flex-col overflow-hidden rounded-2xl border border-line bg-surface md:flex-row">
+      {/* Full-height Chat & Sidebar Layout */}
+      <div className="flex min-h-0 flex-1 flex-col overflow-hidden md:flex-row">
         <ConversationList
           conversations={conversations}
           activeId={activeConversation?.id ?? null}
           onSelect={(conversation) => void selectConversation(conversation)}
           onNew={() => void startNewConversation()}
           onDelete={requestDeleteConversation}
-          creating={creating}
           deletingId={deletingId}
           disabled={sending}
         />
 
-        <section className="flex min-h-0 flex-1 flex-col">
-          <div className="flex items-center justify-between gap-3 border-b border-white/[0.07] px-4 py-3 sm:px-6">
-            <div className="flex min-w-0 items-center gap-3">
-              <button
-                type="button"
-                onClick={() => navigate('/dashboard')}
-                className="grid h-8 w-8 shrink-0 place-items-center rounded-lg text-slate-500 transition hover:bg-white/[0.05] hover:text-white"
-                aria-label="Back to repositories"
-                title="Back to repositories"
-              >
-                <ArrowLeft size={15} />
-              </button>
-              <div className="min-w-0">
-                <p className="code-font text-[9px] uppercase tracking-[0.18em] text-slate-600">
-                  repository chat
-                </p>
-                <h1 className="mt-1 truncate text-sm font-semibold text-white">
-                  {repository.owner}/{repository.name}
-                </h1>
-              </div>
-            </div>
-            <a
-              href={repository.githubUrl}
-              target="_blank"
-              rel="noreferrer"
-              className="inline-flex shrink-0 items-center gap-1.5 rounded-lg border border-line px-2.5 py-1.5 text-[11px] text-slate-400 transition hover:border-lime-300/25 hover:text-lime-300"
-            >
-              GitHub <ExternalLink size={12} />
-            </a>
-          </div>
-
-          <div className="min-h-0 flex-1 overflow-y-auto px-4 py-6 sm:px-7">
+        <section className="flex min-h-0 flex-1 flex-col bg-surface/30">
+          <div className="min-h-0 flex-1 overflow-y-auto px-4 py-6 sm:px-8">
             {messagesLoading ? (
               <div className="grid min-h-full place-items-center">
                 <Spinner size="md" />
               </div>
             ) : messages.length === 0 ? (
-              <div className="mx-auto flex min-h-full max-w-3xl items-center justify-center text-center">
-                <div>
-                  <span className="mx-auto grid h-12 w-12 place-items-center rounded-2xl border border-lime-300/10 bg-lime-300/[0.05] text-lime-300">
-                    <FileCode2 size={20} />
-                  </span>
-                  <h2 className="mt-4 text-xl font-semibold tracking-tight text-white sm:text-2xl">
-                    Ask the codebase anything.
-                  </h2>
-                </div>
+              <div className="mx-auto flex min-h-full max-w-md flex-col items-center justify-center px-4 py-8 text-center">
+                <span className="grid h-12 w-12 place-items-center rounded-2xl border border-lime-300/15 bg-lime-300/[0.06] text-lime-300 shadow-[0_0_25px_rgba(190,242,100,0.08)]">
+                  <FileCode2 size={22} />
+                </span>
+                <h2 className="mt-4 text-xl font-semibold tracking-tight text-white sm:text-2xl">
+                  Ask anything about this codebase
+                </h2>
+                <p className="mt-1.5 text-xs leading-5 text-slate-400">
+                  Type a question in the composer below to search and chat with the repository.
+                </p>
               </div>
             ) : (
               <div className="mx-auto max-w-3xl space-y-6">
@@ -386,8 +339,6 @@ export function ChatPage() {
                   <MessageBubble key={message.id} message={message} />
                 ))}
                 {sending && (
-                  /* Matches MessageBubble's assistant geometry so the bubble
-                     doesn't jump when the real answer replaces it. */
                   <div className="flex justify-start">
                     <div className="rounded-2xl rounded-bl-md border border-white/[0.08] bg-surface-2 px-4 py-4 sm:px-5">
                       <div className="flex items-center gap-3 text-xs text-slate-500">
@@ -401,7 +352,7 @@ export function ChatPage() {
             )}
           </div>
 
-          <div className="border-t border-white/[0.07] px-4 py-3 sm:px-6">
+          <div className="border-t border-white/[0.07] bg-ink/60 px-4 py-3 backdrop-blur-sm sm:px-6">
             <form
               onSubmit={submit}
               className="mx-auto flex max-w-3xl items-end gap-2 rounded-2xl border border-line bg-surface-2 p-2 transition-colors focus-within:border-accent/35"
@@ -427,7 +378,7 @@ export function ChatPage() {
                 className="grid h-10 w-10 shrink-0 place-items-center rounded-xl bg-accent text-black transition-colors hover:bg-lime-200 disabled:cursor-not-allowed disabled:opacity-40"
                 aria-label="Send question"
               >
-                <Send size={16} />
+                {sending ? <Spinner size="sm" /> : <Send size={16} />}
               </button>
             </form>
             <p className="mx-auto mt-2 max-w-3xl text-center code-font text-[9px] uppercase tracking-[0.15em] text-slate-700">
@@ -436,6 +387,6 @@ export function ChatPage() {
           </div>
         </section>
       </div>
-    </main>
+    </div>
   );
 }

@@ -13,10 +13,7 @@ function RepositoryCardSkeleton() {
       </div>
       <div className="mt-4 flex items-center justify-between border-t border-white/[0.06] pt-3">
         <span className="skeleton h-2.5 w-24 rounded" />
-        <div className="flex items-center gap-2">
-          <span className="skeleton h-8 w-8 rounded-lg" />
-          <span className="skeleton h-8 w-20 rounded-xl" />
-        </div>
+        <span className="skeleton h-8 w-8 rounded-lg" />
       </div>
     </Card>
   );
